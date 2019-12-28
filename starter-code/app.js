@@ -8,10 +8,17 @@ const hbs          = require('hbs');
 const mongoose     = require('mongoose');
 const logger       = require('morgan');
 const path         = require('path');
+const passport = require('passport')
+const flash = require("connect-flash");
+const session = require("express-session");
+const LocalStrategy = require("passport-local").Strategy;
+const User = require("./models/user")
+const bcrypt = require("bcrypt")
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
 
 mongoose
-  .connect('mongodb://localhost/starter-code', {useNewUrlParser: true})
+  .connect('mongodb://localhost/authentication-with-passport', {useNewUrlParser: true})
   .then(x => {
     console.log(`Connected to Mongo! Database name: "${x.connections[0].name}"`)
   })
@@ -25,10 +32,80 @@ const debug = require('debug')(`${app_name}:${path.basename(__filename).split('.
 const app = express();
 
 // Middleware Setup
+
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(session({
+  secret: "our-passport-local-strategy-app",
+  resave: true,
+  saveUninitialized: true
+}));
+
+passport.serializeUser((user, cb) => {
+  cb(null, user._id);
+});
+
+passport.deserializeUser((id, cb) => {
+  User.findById(id, (err, user) => {
+    if (err) { return cb(err); }
+    cb(null, user);
+  });
+});
+
+
+app.use(flash());
+
+passport.use(new LocalStrategy({
+  passReqToCallback: true
+}, (req, username, password, next) => {
+  User.findOne({ username }, (err, user) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return next(null, false, { message: "Incorrect username" });
+    }
+    if (!bcrypt.compareSync(password, user.password)) {
+      return next(null, false, { message: "Incorrect password" });
+    }
+
+    return next(null, user);
+  });
+}));
+
+// passport.use(
+//   new GoogleStrategy(
+//     {
+//       clientID: "556015623203-36tibu203sb8229ts7o5j59hm87i3bge.apps.googleusercontent.com",
+//       clientSecret: "4OYUrEfR5TFKi6lc9V0oTRdW",
+//       callbackURL: "/auth/google/callback"
+//     },
+//     (accessToken, refreshToken, profile, done) => {
+//       // to see the structure of the data in received response:
+//       console.log("Google account details:", profile);
+
+//       User.findOne({ googleID: profile.id })
+//         .then(user => {
+//           if (user) {
+//             done(null, user);
+//             return;
+//           }
+
+//           User.create({ googleID: profile.id })
+//             .then(newUser => {
+//               done(null, newUser);
+//             })
+//             .catch(err => done(err)); // closes User.create()
+//         })
+//         .catch(err => done(err)); // closes User.findOne()
+//     }
+//   )
+// );
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Express View engine setup
 
