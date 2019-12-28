@@ -61,23 +61,6 @@ passportRouter.post("/login", passport.authenticate("local", {
   passReqToCallback: true
 }));
 
-// passportRouter.get(
-//   "/auth/google",
-//   passport.authenticate("google", {
-//     scope: [
-//       "https://www.googleapis.com/auth/userinfo.profile",
-//       "https://www.googleapis.com/auth/userinfo.email"
-//     ]
-//   })
-// );
-// passportRouter.get(
-//   "/auth/google/callback",
-//   passport.authenticate("google", {
-//     successRedirect: "/private-page",
-//     failureRedirect: "/" // here you would redirect to the login page using traditional login approach
-//   })
-// );
-
 passportRouter.get("/logout", (req, res) => {
   req.logout();
   res.redirect("/login");
