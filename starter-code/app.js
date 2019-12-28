@@ -14,7 +14,6 @@ const session = require("express-session");
 const LocalStrategy = require("passport-local").Strategy;
 const User = require("./models/user")
 const bcrypt = require("bcrypt")
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
 
 mongoose
@@ -74,35 +73,6 @@ passport.use(new LocalStrategy({
     return next(null, user);
   });
 }));
-
-// passport.use(
-//   new GoogleStrategy(
-//     {
-//       clientID: "556015623203-36tibu203sb8229ts7o5j59hm87i3bge.apps.googleusercontent.com",
-//       clientSecret: "4OYUrEfR5TFKi6lc9V0oTRdW",
-//       callbackURL: "/auth/google/callback"
-//     },
-//     (accessToken, refreshToken, profile, done) => {
-//       // to see the structure of the data in received response:
-//       console.log("Google account details:", profile);
-
-//       User.findOne({ googleID: profile.id })
-//         .then(user => {
-//           if (user) {
-//             done(null, user);
-//             return;
-//           }
-
-//           User.create({ googleID: profile.id })
-//             .then(newUser => {
-//               done(null, newUser);
-//             })
-//             .catch(err => done(err)); // closes User.create()
-//         })
-//         .catch(err => done(err)); // closes User.findOne()
-//     }
-//   )
-// );
 
 app.use(passport.initialize());
 app.use(passport.session());
